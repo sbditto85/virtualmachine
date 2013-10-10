@@ -31,7 +31,7 @@ func TestParseADD(t *testing.T) {
 	a.file = append(a.file, line)
 	err := a.FirstPass()
 	ErrWhenShouldNot(err,t)
-	if a.symbols["LBL"] != 0 {
+	if v,ok := a.symbols["LBL:"]; v != 0 || !ok {
 		t.Errorf("Didn't find LBL symbol address correctly")
 	}
 	err = a.SecondPass()
@@ -53,7 +53,7 @@ func TestParseADI(t *testing.T) {
 	a.file = append(a.file,line)
 	err := a.FirstPass()
 	ErrWhenShouldNot(err,t)
-	if a.symbols["LBL"] != 0 {
+	if v,ok := a.symbols["LBL:"]; v != 0 || !ok {
 		t.Errorf("Didn't find LBL symbol address correctly")
 	}
 }
@@ -77,8 +77,10 @@ func BenchmarkAssembProj1(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		err := a.FirstPass()
-		if err != nil {
+		if err == nil {
 			a.SecondPass()
+		} else {
+			b.Errorf("%s",err)
 		}
 	}
 }
