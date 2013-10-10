@@ -35,6 +35,7 @@ func (v *VirtualMachine) SetBytes(b []byte) {
 	v.bytes = b
 }
 
+//Rewrite the different instructions to have the pc copy 4 bits to a ir (slice of 4 bytes) then use the ir for operands and increment pc by 4
 func (v *VirtualMachine) Run() error {
 	pc := 0
 	for  pc < len(v.bytes) {
@@ -86,7 +87,7 @@ func (v *VirtualMachine) Run() error {
 			pc += 2
 
 			r := v.bytes[i]
-			v.reg[reg1] = int32(r)
+			v.reg[reg1] = int32(r) //consider actualy placing the byte in a specific location
 		case LDR://5
 			pc += 1
 			reg1 := v.bytes[pc]
