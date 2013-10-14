@@ -49,11 +49,11 @@
 
 	;; Add all the elements of list B together print each result (intermediate and final) on screen.  Put 2 spaces between each result. (e.g., 450)
         ;; B = (300, 150, 50, 20, 10, 5)
-        LDR     R2 ZERO:
-        AND     R1 R2
-        ADI     R1 #300
-        ADI     R1 #150
-        AND     R0 R2
+        LDR     R3 ZERO:
+        LDR     R1 B1:
+        LDR     R2 B2:
+        ADD     R1 R2
+        AND     R0 R3
 	ADD     R0 R1
         TRP     #1
 
@@ -63,8 +63,9 @@
 	;; SPACE
 	TRP     #3
 
-        ADI     R1 #50
-        AND     R0 R2
+        LDR     R2 B3:
+        ADD     R1 R2
+        AND     R0 R3
         ADD     R0 R1
         TRP     #1
 
@@ -74,8 +75,9 @@
 	;; SPACE
 	TRP     #3
 
-	ADI     R1 #20
-	AND     R0 R2
+        LDR     R2 B4:
+	ADD     R1 R2
+	AND     R0 R3
 	ADD     R0 R1
 	TRP     #1
 
@@ -85,8 +87,9 @@
 	;; SPACE
 	TRP     #3
 
-	ADI     R1 #10
-	AND     R0 R2
+	LDR     R2 B5:
+	ADD     R1 R2
+        AND     R0 R3
 	ADD     R0 R1
 	TRP     #1
 
@@ -96,13 +99,14 @@
 	;; SPACE
 	TRP     #3
 
-	ADI     R1 #5
-	AND     R0 R2
+	LDR     R2 B6:
+	ADD     R1 R2
+	AND     R0 R3
 	ADD     R0 R1
 	TRP     #1
 
         ;; Store result of part 3 in R5 for later use
-        AND     R5 R2
+        AND     R5 R3
         ADD     R5 R1
 
 	;; (blank line)
