@@ -19,7 +19,7 @@ type Assembler struct {
 func NewAssembler() *Assembler {
 	a := Assembler{}
 	a.symbols = make(map[string]int)
-	a.bytes = make([]byte,5*1000)//*1000) //5MB of memory
+	a.bytes = make([]byte,5*1000*1000) //5MB of memory
 	return &a
 }
 
@@ -42,6 +42,12 @@ func (a *Assembler) ReadFile(f string) error {
 func (a *Assembler) FirstPass() error {
 	address := 0
 	for linenum, line := range a.file {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Recovered from unhandled error on line number %d  => %s\nExiting...\n",linenum+1,r)
+				os.Exit(-1)
+			}
+		}()
 		parts := strings.Fields(line)
 		if len(parts) < 1 || parts[0][0] == ';' {
 			continue
@@ -60,27 +66,10 @@ func (a *Assembler) FirstPass() error {
 		}
 
 		switch parts[0] {
-		case "AND":
+		case "AND","ADD","DIV","MUL","SUB","CMP","MOV":
 			address += 4
-			if len(parts) != 3 {
-				return fmt.Errorf("AND should only have 2 opperands line number %d",linenum + 1)
-			}
-			if parts[1][0] != 'R' {
-				return fmt.Errorf("AND opperand 1 must be a register line number %d",linenum + 1)
-			}
-			if parts[2][0] != 'R' {
-				return fmt.Errorf("AND opperand 2 must be a register line number %d",linenum + 1)
-			}
-		case "ADD":
-			address += 4
-			if len(parts) != 3 {
-				return fmt.Errorf("ADD should only have 2 opperands line number %d",linenum + 1)
-			}
-			if parts[1][0] != 'R' {
-				return fmt.Errorf("ADD opperand 1 must be a register line number %d",linenum + 1)
-			}
-			if parts[2][0] != 'R' {
-				return fmt.Errorf("ADD opperand 2 must be a register line number %d",linenum + 1)
+			if err := a.verifyTwoRegisters(parts,parts[0],linenum + 1); err != nil {
+				return err
 			}
 		case "ADI":
 			address += 4
@@ -93,54 +82,20 @@ func (a *Assembler) FirstPass() error {
 			if parts[2][0] != '#' {
 				return fmt.Errorf("ADI opperand 2 must be an immediate value line number %d",linenum + 1)
 			}
-		case "DIV":
+		case "LDB","LDR","BNZ","BRZ","LDA","STB","BGT","BLT","STR":
 			address += 4
-			if len(parts) != 3 {
-				return fmt.Errorf("DIV should only have 2 opperands line number %d",linenum + 1)
+			if err := a.verifyRegLabel(parts,parts[0],linenum + 1); err != nil {
+				return err
 			}
-			if parts[1][0] != 'R' {
-				return fmt.Errorf("DIV opperand 1 must be a register line number %d",linenum + 1)
-			}
-			if parts[2][0] != 'R' {
-				return fmt.Errorf("DIV opperand 2 must be a register line number %d",linenum + 1)
-			}
-		case "LDB":
+		case "JMP":
 			address += 4
-			if len(parts) != 3 {
-				return fmt.Errorf("LDB should only have 2 opperands line number %d",linenum + 1)
+			if len(parts) != 2 {
+				return fmt.Errorf("JMP should only have 1 opperand line number %d",linenum + 1)
 			}
-			if parts[1][0] != 'R' {
-				return fmt.Errorf("LDB opperand 1 must be a register line number %d",linenum + 1)
-			}
-		case "LDR":
+		case "JMR":
 			address += 4
-			if len(parts) != 3 {
-				return fmt.Errorf("LDR should only have 2 opperands line number %d",linenum + 1)
-			}
-			if parts[1][0] != 'R' {
-				return fmt.Errorf("LDR opperand 1 must be a register line number %d",linenum + 1)
-			}
-		case "MUL":
-			address += 4
-			if len(parts) != 3 {
-				return fmt.Errorf("MUL should only have 2 opperands line number %d",linenum + 1)
-			}
-			if parts[1][0] != 'R' {
-				return fmt.Errorf("MUL opperand 1 must be a register line number %d",linenum + 1)
-			}
-			if parts[2][0] != 'R' {
-				return fmt.Errorf("MUL opperand 2 must be a register line number %d",linenum + 1)
-			}
-		case "SUB":
-			address += 4
-			if len(parts) != 3 {
-				return fmt.Errorf("SUB should only have 2 opperands line number %d",linenum + 1)
-			}
-			if parts[1][0] != 'R' {
-				return fmt.Errorf("SUB opperand 1 must be a register line number %d",linenum + 1)
-			}
-			if parts[2][0] != 'R' {
-				return fmt.Errorf("SUB opperand 2 must be a register line number %d",linenum + 1)
+			if err := a.verifyRegister(parts,parts[0],linenum + 1); err != nil {
+				return err
 			}
 		case "TRP":
 			address += 4
@@ -165,6 +120,39 @@ func (a *Assembler) FirstPass() error {
 		}
 
 		//fmt.Printf("%+v\n",parts)
+	}
+	return nil
+}
+
+func (a *Assembler)  verifyTwoRegisters(parts []string,opp string,ln int) error {
+	if len(parts) != 3 {
+		return fmt.Errorf("%s should only have 2 opperands line number %d",opp,ln)
+	}
+	if parts[1][0] != 'R' {
+		return fmt.Errorf("%s opperand 1 must be a register line number %d",opp,ln)
+	}
+	if parts[2][0] != 'R' {
+		return fmt.Errorf("%s opperand 2 must be a register line number %d",opp,ln)
+	}
+	return nil
+}
+
+func (a *Assembler) verifyRegister(parts []string, opp string, ln int) error {
+	if len(parts) != 2 {
+		return fmt.Errorf("%s should only have 1 opperands line number %d",opp,ln)
+	}
+	if parts[1][0] != 'R' {
+		return fmt.Errorf("%s opperand 1 must be a register line number %d",opp,ln)
+	}
+	return nil
+}
+
+func (a *Assembler) verifyRegLabel(parts []string,opp string, ln int) error {
+	if len(parts) != 3 {
+		return fmt.Errorf("%s should only have 2 opperands line number %d",opp,ln)
+	}
+	if parts[1][0] != 'R' {
+		return fmt.Errorf("%s opperand 1 must be a register line number %d",opp,ln)
 	}
 	return nil
 }
@@ -283,8 +271,12 @@ func (a *Assembler) SecondPass() error {
 
 			//position for next line
 			address += 1
-		case "LDB"://4
-			a.bytes[address] = 4
+		case "LDB"://4 or 104
+			if parts[2][0] == '(' {
+				a.bytes[address] = 104
+			} else {
+				a.bytes[address] = 4
+			}
 			address += 1
 
 			reg1, err1 := a.getRegister(parts[1])
@@ -295,25 +287,38 @@ func (a *Assembler) SecondPass() error {
 
 			address += 1
 
-			//get label address
-			addr, ok := a.symbols[parts[2]]
-			if !ok {
-				return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
-			}
-			bytes, err := a.convertInt16ToBytes(int16(addr))
-			if err != nil {
-				return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
-			}
+			if parts[2][0] == '(' {
+				reg2, err2 := a.getRegister(parts[2][1:len(parts[2])-1])
+				if err2 != nil {
+					return fmt.Errorf("%s line number %d",err2.Error(),linenum + 1)
+				}
+				a.bytes[address] = reg2
+				address += 1
+			} else {
+				//get label address
+				addr, ok := a.symbols[parts[2]]
+				if !ok {
+					return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
+				}
+				bytes, err := a.convertInt16ToBytes(int16(addr))
+				if err != nil {
+					return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+				}
 
-			a.bytes[address] = bytes[0]
-			address += 1
+				a.bytes[address] = bytes[0]
+				address += 1
 
-			a.bytes[address] = bytes[1]
+				a.bytes[address] = bytes[1]
+			}
 
 			//position for next line
 			address += 1
-		case "LDR"://5
-			a.bytes[address] = 5
+		case "LDR"://5 or 105 for indirect
+			if parts[2][0] == '(' {
+				a.bytes[address] = 105
+			} else {
+				a.bytes[address] = 5
+			}
 			address += 1
 
 			reg1, err1 := a.getRegister(parts[1])
@@ -324,20 +329,29 @@ func (a *Assembler) SecondPass() error {
 
 			address += 1
 
-			//get label address
-			addr, ok := a.symbols[parts[2]]
-			if !ok {
-				return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
-			}
-			bytes, err := a.convertInt16ToBytes(int16(addr))
-			if err != nil {
-				return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
-			}
+			if parts[2][0] == '(' {
+				reg2, err2 := a.getRegister(parts[2][1:len(parts[2])-1])
+				if err2 != nil {
+					return fmt.Errorf("%s line number %d",err2.Error(),linenum + 1)
+				}
+				a.bytes[address] = reg2
+				address += 1
+			} else {
+				//get label address
+				addr, ok := a.symbols[parts[2]]
+				if !ok {
+					return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
+				}
+				bytes, err := a.convertInt16ToBytes(int16(addr))
+				if err != nil {
+					return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+				}
 
-			a.bytes[address] = bytes[0]
-			address += 1
+				a.bytes[address] = bytes[0]
+				address += 1
 
-			a.bytes[address] = bytes[1]
+				a.bytes[address] = bytes[1]
+			}
 
 			//position for next line
 			address += 1
@@ -414,6 +428,304 @@ func (a *Assembler) SecondPass() error {
 
 			//position for next line
 			address += 1
+		case "CMP": //9
+			a.bytes[address] = 9
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+
+			reg2, err2 := a.getRegister(parts[2])
+			if err2 != nil {
+				return fmt.Errorf("%s line number %d",err2.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg2
+
+			//padding at end to be 4 bytes
+			address += 1
+			a.bytes[address] = 0
+
+			//position for next line
+			address += 1
+ 		case "BNZ": //10
+			a.bytes[address] = 10
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+
+			//get label address
+			addr, ok := a.symbols[parts[2]]
+			if !ok {
+				return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
+			}
+			bytes, err := a.convertInt16ToBytes(int16(addr))
+			if err != nil {
+				return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+			}
+
+			a.bytes[address] = bytes[0]
+			address += 1
+
+			a.bytes[address] = bytes[1]
+
+			//position for next line
+			address += 1
+		case "BRZ": //11
+			a.bytes[address] = 11
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+
+			//get label address
+			addr, ok := a.symbols[parts[2]]
+			if !ok {
+				return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
+			}
+			bytes, err := a.convertInt16ToBytes(int16(addr))
+			if err != nil {
+				return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+			}
+
+			a.bytes[address] = bytes[0]
+			address += 1
+
+			a.bytes[address] = bytes[1]
+
+			//position for next line
+			address += 1
+		case "MOV"://12
+			a.bytes[address] = 12
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+
+			reg2, err2 := a.getRegister(parts[2])
+			if err2 != nil {
+				return fmt.Errorf("%s line number %d",err2.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg2
+
+			//padding at end to be 4 bytes
+			address += 1
+			a.bytes[address] = 0
+
+			//position for next line
+			address += 1
+		case "JMP": //13
+			a.bytes[address] = 13
+			address += 1
+
+			//get label address
+			addr, ok := a.symbols[parts[1]]
+			if !ok {
+				return fmt.Errorf("Could not find symbol %s on line %d",parts[1],linenum + 1)
+			}
+			bytes, err := a.convertInt16ToBytes(int16(addr))
+			if err != nil {
+				return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+			}
+
+			a.bytes[address] = bytes[0]
+			address += 1
+
+			a.bytes[address] = bytes[1]
+			address += 1 // padding
+
+			//position for next line
+			address += 1
+		case "LDA"://14
+			a.bytes[address] = 14
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+
+			//get label address
+			addr, ok := a.symbols[parts[2]]
+			if !ok {
+				return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
+			}
+			bytes, err := a.convertInt16ToBytes(int16(addr))
+			if err != nil {
+				return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+			}
+
+			a.bytes[address] = bytes[0]
+			address += 1
+
+			a.bytes[address] = bytes[1]
+
+			//position for next line
+			address += 1
+		case "STB"://15
+			a.bytes[address] = 15
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+
+			//get label address
+			addr, ok := a.symbols[parts[2]]
+			if !ok {
+				return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
+			}
+			bytes, err := a.convertInt16ToBytes(int16(addr))
+			if err != nil {
+				return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+			}
+
+			a.bytes[address] = bytes[0]
+			address += 1
+
+			a.bytes[address] = bytes[1]
+
+			//position for next line
+			address += 1
+		case "BGT": //16
+			a.bytes[address] = 16
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+
+			//get label address
+			addr, ok := a.symbols[parts[2]]
+			if !ok {
+				return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
+			}
+			bytes, err := a.convertInt16ToBytes(int16(addr))
+			if err != nil {
+				return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+			}
+
+			a.bytes[address] = bytes[0]
+			address += 1
+
+			a.bytes[address] = bytes[1]
+
+			//position for next line
+			address += 1
+		case "BLT": //17
+			a.bytes[address] = 17
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+
+			//get label address
+			addr, ok := a.symbols[parts[2]]
+			if !ok {
+				return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
+			}
+			bytes, err := a.convertInt16ToBytes(int16(addr))
+			if err != nil {
+				return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+			}
+
+			a.bytes[address] = bytes[0]
+			address += 1
+
+			a.bytes[address] = bytes[1]
+
+			//position for next line
+			address += 1
+		case "STR"://18 or 118 for indirect
+			if parts[2][0] == '(' {
+				a.bytes[address] = 118
+			} else {
+				a.bytes[address] = 18
+			}
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+			if parts[2][0] == '(' {
+				reg2, err2 := a.getRegister(parts[2][1:len(parts[2])-1])
+				if err2 != nil {
+					return fmt.Errorf("%s line number %d",err2.Error(),linenum + 1)
+				}
+				a.bytes[address] = reg2
+				address += 1
+			} else {
+				//get label address
+				addr, ok := a.symbols[parts[2]]
+				if !ok {
+					return fmt.Errorf("Could not find symbol %s on line %d",parts[2],linenum + 1)
+				}
+				bytes, err := a.convertInt16ToBytes(int16(addr))
+				if err != nil {
+					return fmt.Errorf("%s line number %d", err.Error(),linenum + 1)
+				}
+
+				a.bytes[address] = bytes[0]
+				address += 1
+
+				a.bytes[address] = bytes[1]
+			}
+
+			//position for next line
+			address += 1
+		case "JMR"://19
+			a.bytes[address] = 19
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d",err1.Error(),linenum + 1)
+			}
+			a.bytes[address] = reg1
+			address += 2
+
+			//position for next line
+			address += 1
 		case ".BYT":
 			v := parts[1]
 			//fmt.Println(v)
@@ -474,14 +786,27 @@ func (a *Assembler) GetBytes() []byte {
 //Private used functions
 func (a *Assembler) getRegister(s string) (byte,error) {
 	reg := []rune(s)
-	r, err := strconv.ParseInt(string(reg[1:]),10,32)
-	if err != nil {
-		return 0,err
+	switch string(reg[1:]) {
+	case "PC":
+		return 20,nil
+	case "SB":
+		return 21,nil
+	case "FP":
+		return 22,nil
+	case "SP":
+		return 23,nil
+	case "SL":
+		return 24,nil
+	default:
+		r, err := strconv.ParseInt(string(reg[1:]),10,32)
+		if err != nil {
+			return 0,err
+		}
+		if r > 20 {
+			return 0,fmt.Errorf("Invalid Register %d",r)
+		}
+		return byte(r),nil
 	}
-	if r > 20 {
-		return 0,fmt.Errorf("Invalid Register %d",r)
-	}
-	return byte(r),nil
 }
 
 func (a *Assembler) getImmediate(s string) ([2]byte,error) {
