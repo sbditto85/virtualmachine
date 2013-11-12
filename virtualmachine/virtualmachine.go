@@ -240,6 +240,11 @@ if v.debug {
 				if _, err := fmt.Scanf("%c", &c); err != nil {
 					fmt.Println(err)
 				}
+				if c == '\r' {
+					if _, err := fmt.Scanf("%c", &c); err != nil {
+						fmt.Println(err)
+					}
+				}
 				v.reg[0] = int32(c)
 				if v.debug {
 					fmt.Printf("Read in %c\n",c)
