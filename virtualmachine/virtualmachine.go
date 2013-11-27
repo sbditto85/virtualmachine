@@ -61,8 +61,15 @@ func (v *VirtualMachine) SetBytes(b []byte) {
 
 //Rewrite the different instructions to have the pc copy 4 bits to a ir (slice of 4 bytes) then use the ir for operands and increment pc by 4
 func (v *VirtualMachine) Run() error {
+	//INIT Stack Pointers
+	v.reg[SB] = int32(len(v.bytes) - 5) // 1 to put it at the last location and 4 for size of int
+	v.reg[SL] = v.reg[SB] - 4 * 1000 * 1000 // 4MB stack for now
+	v.reg[SP] = v.reg[SB]
+	v.reg[FP] = 0
 	pc := 0
 	v.reg[PC] = int32(pc)
+
+	//Execute the bytes
 	for  pc < len(v.bytes) {
 		if v.debug {
 			//fmt.Printf("inst at %d pc now at %d\n",v.reg[PC],v.reg[PC] + 4)
@@ -232,6 +239,15 @@ if v.debug {
 				val := v.reg[0]
 				fmt.Printf("%d",val)
 			case 2://read integer from stdin
+				var i int32
+				if _, err := fmt.Scanf("%d", &i); err != nil {
+					fmt.Println(err)
+				}
+				v.reg[0] = i
+				if v.debug {
+					fmt.Printf("Read in %d\n",i)
+					//fmt.Scan()
+				}
 			case 3://write char to stdout
 				val := v.reg[0]
 				fmt.Printf("%c",val)
