@@ -1,51 +1,6 @@
 ;;; Casey Allred
 ;;; Project 4
 
-
-        ;; test printing the array
-        ;; set CNT: to 30 * 4  (one past the end)
-        LDA     R6 ARY:
-        ADI     R6 #120
-
-        ;; set back to CNT: -1
-        LDR     R7 ISZE:
-        SUB     R6 R7
-        ;; set front to 0
-        LDA     R5 ARY:
-
-        ;; while front < back
-TWH2:   MOV     R4 R5
-        SUB     R4 R6
-        BGT     R4 ETWH2:
-
-        ;; print front
-        LDR     R0 (R5)
-        TRP     #1
-        ;; increment front
-        LDR     R7 ISZE:
-        ADD     R5 R7
-
-        ;; print new line
-	LDB     R0 NL:
-	TRP     #3
-        
-        ;; print back
-        LDR     R0 (R6)
-        TRP     #1
-        ;; decrement back
-        LDR     R7 ISZE:
-        SUB     R6 R7
-
-        ;; print new line
-	LDB     R0 NL:
-	TRP     #3
-
-        JMP     TWH2:
-
-        ;; we're done for now
-        ;; ETWH1:  TRP     #0
-        
-
         ;; Call function "FMAIN"
         ;; Test for overflow
 ETWH2:  MOV     R10 RSP
@@ -81,23 +36,32 @@ UDRFLW: LDB     R0 LTRCU:
         TRP     #0
 
         ;; GLOBAL DATA
+NUMNUM: .INT    5
+STRVAL: .INT    -1
 ZERO:   .INT    0	
 NL:     .BYT    '\n'
+COMMA:  .BYT    ','
 SP:     .BYT    32
 LTRCO:  .BYT    'O'        	
 LTRCU:  .BYT    'U'
 ISZE:   .INT    4
+COLON:  .BYT    ':'
 
 LTRA:   .BYT    'a'
+LTRB:   .BYT    'b'
 LTRC:   .BYT    'c'
+LTRE:   .BYT    'e'
 LTRCF:  .BYT    'F'
 LTRF:   .BYT    'f'
 LTRI:   .BYT    'i'
 LTRL:   .BYT    'l'
+LTRM:   .BYT    'm'
+LTRCN:  .BYT    'N'
 LTRO:   .BYT    'o'
 LTRR:   .BYT    'r'
 LTRS:   .BYT    's'
 LTRT:   .BYT    't'
+LTRU:   .BYT    'u'
 
 CNT:    .INT    0
 ARY:    .INT    0               ;0
@@ -134,6 +98,7 @@ ARY:    .INT    0               ;0
         
         ;; Functions
 
+;;; main()
         ;; call FDOFAC:
 FMAIN:	MOV     R10 RSP
 	ADI     R10 #-12          ; 4 bytes for Return address & 4 bytes for Previous Frame Pointer (+ params) (+ local variables) (+ temp variables)
@@ -161,45 +126,133 @@ FMAIN:	MOV     R10 RSP
 	LDA     R5 ARY:
 	;; set back to CNT: -1
         LDR     R6 CNT:
-	LDR     R7 ISZE:
-        SUB     R6 R7
-        ADD     R6 R5
+        ADI     R6 #-1
+        LDR     R7 ISZE:
+        MUL     R7 R6
+        ADD     R7 R5
 
 	;; while front < back
 TWH1:   MOV     R4 R5
-	SUB     R4 R6
+	SUB     R4 R7
 	BGT     R4 ETWH1:
-        
+
+        MOV     R4 R5
+        LDA     R3 ARY:
+        SUB     R3 R4
+        BRZ     R3 NFRST:
+	;; print ', '
+	LDB     R0 COMMA:
+	TRP     #3
+	LDB     R0 SP:
+	TRP     #3
+	
 	;; print front
-	LDR     R0 (R5)
+NFRST:  LDR     R0 (R5)
 	TRP     #1
 	;; increment front
-	LDR     R7 ISZE:
-	ADD     R5 R7
+	LDR     R8 ISZE:
+	ADD     R5 R8
         
-	;; print new line
-	LDB     R0 NL:
+	;; print ', '	
+	LDB     R0 COMMA:
 	TRP     #3
-	        
+	LDB     R0 SP:
+	TRP     #3
+        
 	;; print back
-	LDR     R0 (R6)
+	LDR     R0 (R7)
 	TRP     #1
 	;; decrement back
-	LDR     R7 ISZE:
-	SUB     R6 R7
-
-	;; print new line
-	LDB     R0 NL:
-	TRP     #3
+	LDR     R8 ISZE:
+	SUB     R7 R8
         
 	JMP     TWH1:
 
-	;; we're done for now
-        ;; ETWH1:  TRP     #0
+        ;; print new line
+ETWH1:  LDB     R0 NL:
+        TRP     #3
+
+        ;; reset CNT:
+        LDR     R15 ZERO:
+        STR     R15 CNT:
+        
+	;; call FTHFAC:
+	MOV     R10 RSP
+	ADI     R10 #-8          ; 4 bytes for Return address & 4 bytes for Previous Frame Pointer (+ params) (+ local variables) (+ temp variables)
+	CMP     R10 RSL
+	BLT     R10 OVRFLW:
+	;; Create Activation Record and invoke F
+	MOV     R10 RFP
+	MOV     RFP RSP
+	ADI     RSP #-4
+	STR     R10 (RSP)
+	ADI     RSP #-4
+	;; parameters on the stack
+	;; local varibales on the stack
+	;; Temp variables on the stack 
+	;; set the return address and jump
+	MOV     R10 RPC         ; PC already at next instruction
+	ADI     R10 #12
+	STR     R10 (RFP)
+	JMP     FTHFAC:
+
+
+	;; print the array
+	;; set front to 0
+	LDA     R5 ARY:
+	;; set back to CNT: -1
+	LDR     R6 CNT:
+	ADI     R6 #-1
+	LDR     R7 ISZE:
+	MUL     R7 R6
+	ADD     R7 R5
+
+	;; while front < back
+TWH2:   MOV     R4 R5
+	SUB     R4 R7
+	BGT     R4 ETWH2:
+
+	MOV     R4 R5
+	LDA     R3 ARY:
+	SUB     R3 R4
+	BRZ     R3 NFRST2:
+	;; print ', '
+	LDB     R0 COMMA:
+	TRP     #3
+	LDB     R0 SP:
+	TRP     #3
+	
+	;; print front
+NFRST2: LDR     R0 (R5)
+	TRP     #1
+	;; increment front
+	LDR     R8 ISZE:
+	ADD     R5 R8
+	        
+	;; print ', '	
+	LDB     R0 COMMA:
+	TRP     #3
+	LDB     R0 SP:
+	TRP     #3
+	        
+	;; print back
+	LDR     R0 (R7)
+	TRP     #1
+	;; decrement back
+	LDR     R8 ISZE:
+	SUB     R7 R8
+	        
+	JMP     TWH2:
+
+	;; print new line
+ETWH2:  LDB     R0 NL:
+	TRP     #3
+
+        
         
         ;; return from function
 	;; test for underflow
-ETWH1:  MOV     RSP RFP
+        MOV     RSP RFP
 	MOV     R10 RSP
 	CMP     R10 RSB
 	BGT     R10 UDRFLW:     ; oopsy underflow problem
@@ -211,7 +264,7 @@ ETWH1:  MOV     RSP RFP
 	;; store the return value (if needed)	
 	JMR     R10             ; go back
 
-
+;;; Factorial
 FFACT:  MOV     R10 RFP
 	ADI     R10 #-8
 	LDR     R1 (R10)        ; Get n (R1)
@@ -284,15 +337,31 @@ FFEL:   MOV     R10 RSP
 	JMR     R10             ; go back
 
         
-
+;;; DoFactorial
         ;; test count <= 15
-FDOFAC:  LDR     R6 CNT:
-        LDR     R7 ISZE:
-        DIV     R6 R7
-	ADI     R6 #-29
+FDOFAC: LDR     R6 CNT:
+        ADI     R6 #-29
         BGT     R6 EWH1:
 
         ;; get value and test not 0
+        ;; print Promt "Number:"
+        LDB     R0 LTRCN:
+        TRP     #3
+        LDB     R0 LTRU:
+        TRP     #3
+        LDB     R0 LTRM:
+        TRP     #3
+        LDB     R0 LTRB:
+        TRP     #3
+        LDB     R0 LTRE:
+        TRP     #3
+        LDB     R0 LTRR:
+        TRP     #3
+        LDB     R0 COLON:
+        TRP     #3
+        LDB     R0 SP:
+        TRP     #3
+        
         TRP     #2
 	BRZ     R0 EWH1:
 	        
@@ -384,7 +453,9 @@ FDOFAC:  LDR     R6 CNT:
         ;; get the address to store in
         LDA     R5 ARY:
         LDR     R6 CNT:
-        ADD     R5 R6
+        LDR     R7 ISZE:
+        MUL     R7 R6
+        ADD     R5 R7
 	;; get value entered
 	MOV     R10 RFP
 	ADI     R10 #-8
@@ -392,27 +463,217 @@ FDOFAC:  LDR     R6 CNT:
         ;; store it
         STR     R1 (R5)
         ;; update count
-        LDR     R7 ISZE:
-        ADD     R6 R7
+        ADI     R6 #1
         STR     R6 CNT:
         ;; Store result in the array
         ;; get the address to store in
 	LDA     R5 ARY:
 	LDR     R6 CNT:
-	ADD     R5 R6
+        LDR     R7 ISZE:
+        MUL     R7 R6
+	ADD     R5 R7
 	;; get result	
 	LDR     R1 (RSP)
         ;; store it
 	STR     R1 (R5)
 	;; update count
-	LDR     R7 ISZE:
-	ADD     R6 R7
+        ADI     R6 #1
 	STR     R6 CNT:
 	        
         JMP     FDOFAC:          ; WH1:
         ;; return from function
 	;; test for underflow
 EWH1:   MOV     RSP RFP
+	MOV     R10 RSP
+	CMP     R10 RSB
+	BGT     R10 UDRFLW:     ; oopsy underflow problem
+	;; set previous frame to current frame and return
+	LDR     R10 (RFP)
+	MOV     R11 RFP
+	ADI     R11 #-4         ; now pointing at PFP
+	LDR     RFP (R11)       ; make FP = PFP
+	;; store the return value (if needed)	
+	JMR     R10             ; go back
+
+;;; Multi Threaded factorial
+        ;; get value and test not 0
+        ;; print Promt "2 Numbers:"
+FTHFAC: LDR     R0 NUMNUM:
+        TRP     #1
+        LDB     R0 SP:
+        TRP     #3
+        LDB     R0 LTRCN:
+        TRP     #3
+        LDB     R0 LTRU:
+        TRP     #3
+        LDB     R0 LTRM:
+        TRP     #3
+        LDB     R0 LTRB:
+        TRP     #3
+        LDB     R0 LTRE:
+        TRP     #3
+        LDB     R0 LTRR:
+        TRP     #3
+        LDB     R0 LTRS:
+        TRP     #3
+        LDB     R0 COLON:
+        TRP     #3
+        LDB     R0 SP:
+        TRP     #3
+
+        ;; index
+        LDR     R6 ZERO:
+        ADI     R6 #1
+        ;; max index
+        LDR     R8 ZERO:
+        ADI     R8 #6
+
+        ;; get and store thread's number
+NUWH:   MOV     R4 R6
+        SUB     R4 R8
+        BRZ     R4 ENUWH:
+        TRP     #2
+        LDA     R5 ARY:
+        LDR     R7 ISZE:
+        MUL     R7 R6
+        ADD     R5 R7
+        STR     R0 (R5)
+        ADI     R6 #1
+	JMP     NUWH:        
+
+ENUWH:  RUN     R1 THFAC:
+        RUN     R1 THFAC:
+        RUN     R1 THFAC:
+        RUN     R1 THFAC:
+        RUN     R1 THFAC:
+        BLK
+        JMP     THMAIN:
+
+        ;; get n from array and put in R0
+THFAC:  LDA     R5 ARY:
+        LDR     R7 ISZE:
+        MUL     R7 R1           ; R1 is where the threadid should be
+        ADD     R5 R7
+        LDR     R0 (R5)
+        
+        ;; good to go lets get the value
+        MOV     R19 R0
+        ;; CALL FFACT:
+        ;; Test for overflow
+	MOV     R10 RSP
+	ADI     R10 #-12          ; 4 bytes for Return address & 4 bytes for Previous Frame Pointer (+ params) (+ local variables) (+ temp variables)
+	CMP     R10 RSL
+	BLT     R10 OVRFLW:
+	;; Create Activation Record and invoke F
+	MOV     R10 RFP
+	MOV     RFP RSP
+	ADI     RSP #-4
+	STR     R10 (RSP)
+	ADI     RSP #-4
+	;; parameters on the stack
+	STR     R0 (RSP)
+	ADI     RSP #-4	
+	;; local varibales on the stack
+	;; Temp variables on the stack 
+	;; set the return address and jump
+	MOV     R10 RPC         ; PC already at next instruction
+	ADI     R10 #12
+	STR     R10 (RFP)
+	JMP     FFACT:
+
+	;; get return value into R6
+	LDR     R6 (RSP)
+
+        ;; print "Factorial of X is Y"
+        ;; print Factorial
+        LDB     R0 LTRCF:
+        TRP     #3
+        LDB     R0 LTRA:
+        TRP     #3
+        LDB     R0 LTRC:
+        TRP     #3
+        LDB     R0 LTRT:
+        TRP     #3
+        LDB     R0 LTRO:
+        TRP     #3
+        LDB     R0 LTRR:
+        TRP     #3
+        LDB     R0 LTRI:
+        TRP     #3
+        LDB     R0 LTRA:
+        TRP     #3
+        LDB     R0 LTRL:
+        TRP     #3
+        ;; print space
+        LDB     R0 SP:
+        TRP     #3
+        ;; print of
+        LDB     R0 LTRO:
+        TRP     #3
+        LDB     R0 LTRF:
+        TRP     #3	
+	;; print space
+	LDB     R0 SP:
+	TRP     #3
+        ;; print n
+        MOV     R0 R19
+        TRP     #1
+	;; print space
+	LDB     R0 SP:
+	TRP     #3
+        ;; print is
+        LDB     R0 LTRI:
+        TRP     #3
+        LDB     R0 LTRS:
+        TRP     #3	
+	;; print space
+	LDB     R0 SP:
+	TRP     #3	
+	;; print out the return value	
+	LDR     R0 (RSP)
+	TRP     #1
+	;; print new line
+	LDB     R0 NL:
+	TRP     #3
+
+        LCK     STRVAL:
+        ;; Store value entered in the array
+        ;; get the address to store in
+        LDA     R5 ARY:
+        LDR     R6 CNT:
+        LDR     R7 ISZE:
+        MUL     R7 R6
+        ADD     R5 R7
+	;; get value entered
+	MOV     R10 RFP
+	ADI     R10 #-8
+	LDR     R1 (R10)
+        ;; store it
+        STR     R1 (R5)
+        ;; update count
+        ADI     R6 #1
+        STR     R6 CNT:
+        ;; Store result in the array
+        ;; get the address to store in
+	LDA     R5 ARY:
+	LDR     R6 CNT:
+        LDR     R7 ISZE:
+        MUL     R7 R6
+	ADD     R5 R7
+	;; get result	
+	LDR     R1 (RSP)
+        ;; store it
+	STR     R1 (R5)
+	;; update count
+        ADI     R6 #1
+	STR     R6 CNT:
+        ULK     STRVAL:
+
+        END
+        
+        ;; return from function
+	;; test for underflow
+THMAIN: MOV     RSP RFP
 	MOV     R10 RSP
 	CMP     R10 RSB
 	BGT     R10 UDRFLW:     ; oopsy underflow problem
