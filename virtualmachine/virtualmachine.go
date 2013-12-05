@@ -204,7 +204,7 @@ func (v *VirtualMachine) Run() error {
 	for  pc < len(v.bytes) {
 		if numWait == 0 {
 			v.contextSwitch() //switch every time
-			numWait = 1
+			numWait = 3
 		}
 		if v.debug {
 			fmt.Printf("thread: %d at %d pc now at %d\n",v.curThread,v.reg[PC],v.reg[PC] + 4)
@@ -678,6 +678,8 @@ if v.debug {
 			
 			//copy new state in (now with update PC)
 			v.copyStateIn(v.threads[newId])
+			//v.curThread = int(newId)
+			//numWait = 3
 
 			//get the old state out as we haven't switched to the new context
 			v.takeStateOut(v.threads[oldId])

@@ -46,6 +46,9 @@ LTRCO:  .BYT    'O'
 LTRCU:  .BYT    'U'
 ISZE:   .INT    4
 COLON:  .BYT    ':'
+LPAREN: .BYT    '('
+RPAREN: .BYT    ')'
+PERIOD: .BYT    '.'
 
 LTRA:   .BYT    'a'
 LTRB:   .BYT    'b'
@@ -65,36 +68,76 @@ LTRU:   .BYT    'u'
 
 CNT:    .INT    0
 ARY:    .INT    0               ;0
-        .INT    1
-	.INT    2
-	.INT    3
-	.INT    4               ;4
-	.INT    5
-	.INT    6
-	.INT    7
-	.INT    8
-	.INT    9               ;9
-	.INT    10
-	.INT    11
-	.INT    12
-	.INT    13
-	.INT    14              ;14
-	.INT    15
-	.INT    16
-	.INT    17
-	.INT    18
-	.INT    19              ;19
-	.INT    20
-	.INT    21
-	.INT    22
-	.INT    23
-	.INT    24              ;24
-	.INT    25
-	.INT    26
-	.INT    27
-	.INT    28
-	.INT    29              ;29
+        .INT    0
+	.INT    0
+	.INT    0
+	.INT    0               ;4
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0               ;9
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0               ;14
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0               ;19
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0               ;24
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0
+	.INT    0               ;29
 
+;;; Snippets for use when needed
+	;; print the array front to back
+	;; set front to 0
+	LDA     R5 ARY:
+	;; set back to CNT: -1
+	LDR     R6 CNT:
+	ADI     R6 #-1
+	LDR     R7 ISZE:
+	MUL     R7 R6
+	ADD     R7 R5
+
+	;; while front < back
+TWH3:   MOV     R4 R5
+	SUB     R4 R7
+	BGT     R4 ETWH3:
+
+	MOV     R4 R5
+	LDA     R3 ARY:
+	SUB     R3 R4
+	BRZ     R3 NFRST3:
+	;; print ', '
+	LDB     R0 COMMA:
+	TRP     #3
+	LDB     R0 SP:
+	TRP     #3
+	
+	;; print front
+NFRST3: LDR     R0 (R5)
+	TRP     #1
+	;; increment front
+	LDR     R8 ISZE:
+	ADD     R5 R8
+	        
+	JMP     TWH3:
+
+	;; print new line
+ETWH3:  LDB     R0 NL:
+	TRP     #3
+
+        
         
         ;; Functions
 
@@ -247,7 +290,6 @@ NFRST2: LDR     R0 (R5)
 	;; print new line
 ETWH2:  LDB     R0 NL:
 	TRP     #3
-
         
         
         ;; return from function
@@ -497,7 +539,7 @@ EWH1:   MOV     RSP RFP
 
 ;;; Multi Threaded factorial
         ;; get value and test not 0
-        ;; print Promt "2 Numbers:"
+        ;; print Promt "2 Numbers(Num Num ...):"
 FTHFAC: LDR     R0 NUMNUM:
         TRP     #1
         LDB     R0 SP:
@@ -516,6 +558,32 @@ FTHFAC: LDR     R0 NUMNUM:
         TRP     #3
         LDB     R0 LTRS:
         TRP     #3
+        LDB     R0 LPAREN:
+        TRP     #3
+        LDB     R0 LTRCN:
+        TRP     #3
+        LDB     R0 LTRU:
+        TRP     #3
+        LDB     R0 LTRM:
+        TRP     #3
+        LDB     R0 SP:
+        TRP     #3	
+	LDB     R0 LTRCN:
+	TRP     #3
+	LDB     R0 LTRU:
+	TRP     #3
+	LDB     R0 LTRM:
+	TRP     #3
+	LDB     R0 SP:
+	TRP     #3
+        LDB     R0 PERIOD:
+        TRP     #3
+        LDB     R0 PERIOD:
+	TRP     #3
+        LDB     R0 PERIOD:
+	TRP     #3
+	LDB     R0 RPAREN:
+	TRP     #3
         LDB     R0 COLON:
         TRP     #3
         LDB     R0 SP:
