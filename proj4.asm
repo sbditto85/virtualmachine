@@ -35,6 +35,39 @@ UDRFLW: LDB     R0 LTRCU:
         TRP     #3
         TRP     #0
 
+        ;; print invalid input
+INVAL:  LDB     R0 LTRI:
+        TRP     #3
+        LDB     R0 LTRV:
+        TRP     #3
+        LDB     R0 LTRA:
+        TRP     #3
+        LDB     R0 LTRL:
+        TRP     #3
+        LDB     R0 LTRI:
+        TRP     #3
+        LDB     R0 LTRD:
+        TRP     #3
+        
+        LDB     R0 SP:
+        TRP     #3
+
+        LDB     R0 LTRI:
+        TRP     #3
+        LDB     R0 LTRN:
+        TRP     #3
+        LDB     R0 LTRP:
+        TRP     #3
+        LDB     R0 LTRU:
+        TRP     #3
+        LDB     R0 LTRT:
+        TRP     #3
+
+        LDB     R0 NL:
+        TRP     #3
+        ;; STOP
+        TRP     #0
+
         ;; GLOBAL DATA
 NUMNUM: .INT    5
 STRVAL: .INT    -1
@@ -53,18 +86,22 @@ PERIOD: .BYT    '.'
 LTRA:   .BYT    'a'
 LTRB:   .BYT    'b'
 LTRC:   .BYT    'c'
+LTRD:   .BYT    'd'
 LTRE:   .BYT    'e'
 LTRCF:  .BYT    'F'
 LTRF:   .BYT    'f'
 LTRI:   .BYT    'i'
 LTRL:   .BYT    'l'
 LTRM:   .BYT    'm'
+LTRN:   .BYT    'n'
 LTRCN:  .BYT    'N'
 LTRO:   .BYT    'o'
+LTRP:   .BYT    'p'
 LTRR:   .BYT    'r'
 LTRS:   .BYT    's'
 LTRT:   .BYT    't'
 LTRU:   .BYT    'u'
+LTRV:   .BYT    'v'
 
 CNT:    .INT    0
 ARY:    .INT    0               ;0
@@ -310,6 +347,9 @@ ETWH2:  LDB     R0 NL:
 FFACT:  MOV     R10 RFP
 	ADI     R10 #-8
 	LDR     R1 (R10)        ; Get n (R1)
+
+        ;; if n < 0 then freak out
+        BLT     R1 INVAL:
 
         ;; if n == 0 then return 1
         BNZ     R1 FFEL:

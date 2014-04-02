@@ -1,8 +1,8 @@
 package virtualmachine
 
 import (
-	"testing"
 	asm "../assembler"
+	"testing"
 )
 
 var a *asm.Assembler
@@ -10,7 +10,7 @@ var by []byte
 var v *VirtualMachine
 
 func setup() {
-	by = make([]byte,5*1000*1000)
+	by = make([]byte, 5*1000*1000)
 
 	a = asm.NewAssembler()
 	err := a.ReadFile("../proj1.asm")
@@ -30,14 +30,10 @@ func setup() {
 //	setup()
 //}
 
-
-
-
-
 func BenchmarkParseADD(b *testing.B) {
 	setup()
 	b.ResetTimer()
-	for i:=0; i < b.N; i++ {
+	for i := 0; i < b.N; i++ {
 		v.Run()
 	}
 }
