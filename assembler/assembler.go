@@ -39,6 +39,10 @@ func (a *Assembler) ReadFile(f string) error {
 	return scanner.Err()
 }
 
+func (a *Assembler) ReadStrings(strs []string) {
+	a.file = strs
+}
+
 func (a *Assembler) FirstPass() error {
 	address := 0
 	for linenum, line := range a.file {

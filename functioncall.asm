@@ -75,7 +75,7 @@ F:      ADD     R0 R0
         JMR     R10             ; go back
 
         
-        ;; global data
+        ;; Global data
 NL:     .BYT    '\n'
 
 STKLMT: TRP     #99             ;just a marker for top of the stack, meaningless TRP here
