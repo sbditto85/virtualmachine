@@ -594,8 +594,12 @@ func (a *Assembler) SecondPass() error {
 
 			//position for next line
 			address += 1
-		case "STB": //15
-			a.bytes[address] = 15
+		case "STB": //15 or 150 for indirect
+			if parts[2][0] == '(' {
+				a.bytes[address] = 150
+			} else {
+				a.bytes[address] = 15
+			}
 			address += 1
 
 			reg1, err1 := a.getRegister(parts[1])
@@ -606,21 +610,29 @@ func (a *Assembler) SecondPass() error {
 
 			address += 1
 
-			//get label address
-			addr, ok := a.symbols[parts[2]]
-			if !ok {
-				return fmt.Errorf("Could not find symbol %s on line %d", parts[2], linenum+1)
+			if parts[2][0] == '(' {
+				reg2, err2 := a.getRegister(parts[2][1 : len(parts[2])-1])
+				if err2 != nil {
+					return fmt.Errorf("%s line number %d", err2.Error(), linenum+1)
+				}
+				a.bytes[address] = reg2
+				address += 1
+			} else {
+				//get label address
+				addr, ok := a.symbols[parts[2]]
+				if !ok {
+					return fmt.Errorf("Could not find symbol %s on line %d", parts[2], linenum+1)
+				}
+				bytes, err := a.convertInt16ToBytes(int16(addr))
+				if err != nil {
+					return fmt.Errorf("%s line number %d", err.Error(), linenum+1)
+				}
+				
+				a.bytes[address] = bytes[0]
+				address += 1
+				
+				a.bytes[address] = bytes[1]
 			}
-			bytes, err := a.convertInt16ToBytes(int16(addr))
-			if err != nil {
-				return fmt.Errorf("%s line number %d", err.Error(), linenum+1)
-			}
-
-			a.bytes[address] = bytes[0]
-			address += 1
-
-			a.bytes[address] = bytes[1]
-
 			//position for next line
 			address += 1
 		case "BGT": //16

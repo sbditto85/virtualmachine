@@ -46,6 +46,7 @@ const (
 	LDBI = 104
 	LDRI = 105
 	STRI = 118
+	STBI = 150
 )
 
 //put here for reference mostly
@@ -644,6 +645,22 @@ func (v *VirtualMachine) Run() error {
 				// fmt.Printf("bytes 3 %d\n",v.bytes[loc + 3])
 				fmt.Printf("STRI stored value %d from register %d to address %d\n", i, reg1, v.reg[reg2])
 				//fmt.Scanln()
+			}
+		case STBI: //150
+			pc += 1
+			reg1 := v.bytes[pc]
+			pc += 1
+			reg2 := v.bytes[pc]
+			pc += 2
+
+			loc := v.reg[reg2]
+			i, ierr := convertInt32ToBytes(v.reg[reg1])
+			if ierr != nil {
+				return fmt.Errorf("Problem converting value fo STR at register %d", reg1)
+			}
+			v.bytes[loc] = i[0]
+			if v.debug {
+				fmt.Printf("STRI stored value %d from register %d to address %d\n", i, reg1, v.reg[reg2])
 			}
 		case RUN:
 			pc += 1
