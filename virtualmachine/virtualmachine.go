@@ -43,6 +43,7 @@ const (
 	ULK
 	BLK
 	END
+	OR //25
 	LDBI = 104
 	LDRI = 105
 	STRI = 118
@@ -221,6 +222,18 @@ func (v *VirtualMachine) Run() error {
 			pc += 2
 
 			if v.reg[reg1] != 0 && v.reg[reg2] != 0 {
+				v.reg[reg1] = 1
+			} else {
+				v.reg[reg1] = 0
+			}
+		case OR: //25
+			pc += 1
+			reg1 := v.bytes[pc]
+			pc += 1
+			reg2 := v.bytes[pc]
+			pc += 2
+
+			if v.reg[reg1] != 0 || v.reg[reg2] != 0 {
 				v.reg[reg1] = 1
 			} else {
 				v.reg[reg1] = 0

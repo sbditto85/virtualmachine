@@ -210,6 +210,30 @@ func (a *Assembler) SecondPass() error {
 
 			//position for next line
 			address += 1
+		case "OR": //25
+			a.bytes[address] = 25
+			address += 1
+
+			reg1, err1 := a.getRegister(parts[1])
+			if err1 != nil {
+				return fmt.Errorf("%s line number %d", err1.Error(), linenum+1)
+			}
+			a.bytes[address] = reg1
+
+			address += 1
+
+			reg2, err2 := a.getRegister(parts[2])
+			if err2 != nil {
+				return fmt.Errorf("%s line number %d", err2.Error(), linenum+1)
+			}
+			a.bytes[address] = reg2
+
+			//padding at end to be 4 bytes
+			address += 1
+			a.bytes[address] = 0
+
+			//position for next line
+			address += 1
 		case "ADD": //1
 			a.bytes[address] = 1
 			address += 1
