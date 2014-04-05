@@ -89,13 +89,15 @@ func (v *VirtualMachine) initStack() int {
 	mainFP = mainSB
 	mainPC = 0
 
+	//TODO: make a complete stack reg to compare against heap pointer for compiling multi threaded
+
 	v.reg[SB] = mainSB
 	v.reg[SL] = mainSL
 	v.reg[SP] = mainSP
 	v.reg[FP] = mainFP
 	v.reg[PC] = mainPC
 
-	v.threads[0] = int32(len(v.bytes) - 5)
+	v.threads[0] = int32(len(v.bytes) - 5) //-4 for int size then -1 so pointing at spot
 
 	v.copyStateIn(int32(len(v.bytes) - 5))
 

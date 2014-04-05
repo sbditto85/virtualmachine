@@ -70,7 +70,7 @@ func (a *Assembler) FirstPass() error {
 		}
 
 		switch parts[0] {
-		case "AND", "ADD", "DIV", "MUL", "SUB", "CMP", "MOV":
+		case "AND", "OR", "ADD", "DIV", "MUL", "SUB", "CMP", "MOV":
 			address += 4
 			if err := a.verifyTwoRegisters(parts, parts[0], linenum+1); err != nil {
 				return err
