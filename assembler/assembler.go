@@ -651,10 +651,10 @@ func (a *Assembler) SecondPass() error {
 				if err != nil {
 					return fmt.Errorf("%s line number %d", err.Error(), linenum+1)
 				}
-				
+
 				a.bytes[address] = bytes[0]
 				address += 1
-				
+
 				a.bytes[address] = bytes[1]
 			}
 			//position for next line

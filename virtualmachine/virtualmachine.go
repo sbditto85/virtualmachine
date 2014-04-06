@@ -43,7 +43,7 @@ const (
 	ULK
 	BLK
 	END
-	OR //25
+	OR   //25
 	LDBI = 104
 	LDRI = 105
 	STRI = 118
