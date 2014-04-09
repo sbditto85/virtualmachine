@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	//"strconv"
 	//"os"
 	//"bufio"
 )
@@ -80,7 +81,7 @@ func (v *VirtualMachine) initStack() int {
 
 	var mainFP, mainPC, totSL, threadSL, thdSL int32
 
-	totSL = 4 * 1000 * 1000 // 4MB stack for now
+	totSL = 5 * 1000 * 1000 // 4MB stack for now
 	threadSL = totSL / NUM_THREADS
 	//INIT Stack Pointers
 	mainSB := int32(len(v.bytes) - (5 + NUM_REG*4)) // 1 to put it at the last location and 4 for size of int NUM_REG * 4 for the thread state
@@ -214,6 +215,7 @@ func (v *VirtualMachine) Run() error {
 			fmt.Printf("thread: %d at %d pc now at %d\n", v.curThread, v.reg[PC], v.reg[PC]+4)
 		}
 		pc = int(v.reg[PC])
+		
 		v.reg[PC] += 4
 		switch v.bytes[pc] {
 		case AND: //0
@@ -422,8 +424,8 @@ func (v *VirtualMachine) Run() error {
 					fmt.Printf("Read in %c\n", c)
 					//fmt.Scan()
 				}
-			case 10:
-			case 11:
+			case 10: //char to int
+			case 11: //int to char
 			case 99:
 				if v.debug {
 					v.debug = false

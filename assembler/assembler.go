@@ -19,7 +19,7 @@ type Assembler struct {
 func NewAssembler() *Assembler {
 	a := Assembler{}
 	a.symbols = make(map[string]int)
-	a.bytes = make([]byte, 5*1000*1000) //5MB of memory
+	a.bytes = make([]byte, 10*1000*1000) //5MB of memory
 	return &a
 }
 

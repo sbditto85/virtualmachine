@@ -1,4 +1,5 @@
-LDA     R9 FREE:
+        TRP     #99
+        LDA     R9 FREE:
 ;; Call function "MAIN:"
 ;; Test for overflow
 MOV     R10 RSP
@@ -1396,6 +1397,7 @@ JMP     Me6:
 	MOV	R10 RFP	;
 	ADI	R10 #-92	;
 	STR	R11 (R10)	;
+        TRP     #99
 ;; return from function
 ;; test for underflow
 MOV     RSP RFP
