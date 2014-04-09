@@ -2,7 +2,7 @@ LDA     R9 FREE:
 ;; Call function "MAIN:"
 ;; Test for overflow
 MOV     R10 RSP
-ADI     R10 #-48          ; 4 bytes for Return address & 4 bytes for Previous Frame Pointer 4 bytes for this (+ params) (+ local variables) (+ temp variables)
+ADI     R10 #-52          ; 4 bytes for Return address & 4 bytes for Previous Frame Pointer 4 bytes for this (+ params) (+ local variables) (+ temp variables)
 CMP     R10 RSL
 BLT     R10 OVRFLW:
 ;; Create Activation Record and invoke MAIN
@@ -20,6 +20,7 @@ ADI     RSP #-4
 ADI     RSP #-4
 ADI     RSP #-4
 ;; Temp variables on the stack
+ADI     RSP #-4
 ADI     RSP #-4
 ADI     RSP #-4
 ADI     RSP #-4
@@ -55,11 +56,11 @@ NL:     .BYT    '\n'
 LTRCU:  .BYT    'U'
 LTRCO:  .BYT    'O'
 LTRCH:  .BYT    'H'
-Li20:	.INT	0
-Li14:	.INT	5
-Li33:	.INT	3
+Li32:	.INT	1
 Li25:	.INT	10
-Li30:	.INT	1
+Li14:	.INT	5
+Li20:	.INT	0
+Li30:	.INT	3
 ;; functions
 Co5:   ADI   R0 #0 ;    Dogs(int tmp[]) {
 ;; Call function "St11:        Dogs(int tmp[]) {"
@@ -92,7 +93,6 @@ MOV     R10 RPC         ; PC already at next instruction
 ADI     R10 #12
 STR     R10 (RFP)
 JMP     St11:
-        TRP     #99
 	MOV	R10 RFP	;
 	ADI	R10 #-8	;
 	LDR	R13 (R10)	;
@@ -109,7 +109,6 @@ JMP     St11:
 	ADI	R10 #-16	;
 	LDR	R13 (R10)	;
 	STR	R3 (R13)	;Save from Register
-        TRP     #99
 ;; return from function
 ;; test for underflow
 MOV     RSP RFP
@@ -359,6 +358,24 @@ JMP     Co5:
 	MOV	R10 RFP	;
 	ADI	R10 #-16	;
 	STR	R3 (R10)	;
+        TRP     #99
+	MOV	R10 RFP	;Load Address
+	ADI	R10 #-12	;
+	LDR	R13 (R10)	;
+	LDR	R14 Li30:	;
+	SUB	R12 R12
+	ADI	R12 #4
+	MUL	R14 R12
+	ADD	R13 R14
+	MOV	R10 RFP	;Save Address
+	ADI	R10 #-32	;
+	STR	R13 (R10)	;
+	LDR	R3 Li30:	;    os[3] = 3;
+	MOV	R10 RFP	;Load Address
+	ADI	R10 #-32	;
+	LDR	R13 (R10)	;
+	STR	R3 (R13)	;Save from Register
+        TRP     #99
 ;; Call function "Me7:        d2.set(1);"
 ;; Test for overflow
 :   MOV     R10 RSP
@@ -377,8 +394,8 @@ ADI     RSP #-4
 	LDR	R1 (R10)	;
 STR     R1 (RSP)
 ADI     RSP #-4
-;; parameters on the stack (Li30)  ;     d2.set(1);
-	LDR	R1 Li30:	;
+;; parameters on the stack (Li32)  ;     d2.set(1);
+	LDR	R1 Li32:	;
 STR     R1 (RSP)
 ADI     RSP #-4
 ;; local varibales on the stack    ;     d2.set(1);
@@ -397,7 +414,7 @@ STR     R10 (RFP)
 JMP     Me7:
 	LDR	R11 (RSP)	;    d2.set(1);
 	MOV	R10 RFP	;
-	ADI	R10 #-32	;
+	ADI	R10 #-36	;
 	STR	R11 (R10)	;
 ;; Call function "Me8:        d2.print();"
 ;; Test for overflow
@@ -433,7 +450,7 @@ STR     R10 (RFP)
 JMP     Me8:
 	LDR	R11 (RSP)	;    d2.print();
 	MOV	R10 RFP	;
-	ADI	R10 #-36	;
+	ADI	R10 #-40	;
 	STR	R11 (R10)	;
 ;; Call function "Me7:        d2.set(3);"
 ;; Test for overflow
@@ -453,8 +470,8 @@ ADI     RSP #-4
 	LDR	R1 (R10)	;
 STR     R1 (RSP)
 ADI     RSP #-4
-;; parameters on the stack (Li33)  ;     d2.set(3);
-	LDR	R1 Li33:	;
+;; parameters on the stack (Li30)  ;     d2.set(3);
+	LDR	R1 Li30:	;
 STR     R1 (RSP)
 ADI     RSP #-4
 ;; local varibales on the stack    ;     d2.set(3);
@@ -473,7 +490,7 @@ STR     R10 (RFP)
 JMP     Me7:
 	LDR	R11 (RSP)	;    d2.set(3);
 	MOV	R10 RFP	;
-	ADI	R10 #-40	;
+	ADI	R10 #-44	;
 	STR	R11 (R10)	;
 ;; Call function "Me8:        d2.print();"
 ;; Test for overflow
@@ -509,7 +526,7 @@ STR     R10 (RFP)
 JMP     Me8:
 	LDR	R11 (RSP)	;    d2.print();
 	MOV	R10 RFP	;
-	ADI	R10 #-44	;
+	ADI	R10 #-48	;
 	STR	R11 (R10)	;
 ;; return from function
 ;; test for underflow
