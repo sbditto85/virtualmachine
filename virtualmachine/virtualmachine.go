@@ -677,7 +677,7 @@ func (v *VirtualMachine) Run() error {
 			}
 			v.bytes[loc] = i[0]
 			if v.debug {
-				fmt.Printf("STRI stored value %d from register %d to address %d\n", i, reg1, v.reg[reg2])
+				fmt.Printf("STBI stored value %d from register %d to address %d\n", i, reg1, v.reg[reg2])
 			}
 		case RUN:
 			pc += 1
