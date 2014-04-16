@@ -213,6 +213,37 @@ func (v *VirtualMachine) Run() error {
 		}
 		if v.debug {
 			fmt.Printf("thread: %d at %d pc now at %d\n", v.curThread, v.reg[PC], v.reg[PC]+4)
+			cont := true
+			for cont {
+				var option rune
+				fmt.Scanf("%c",&option)
+				switch option {
+				case '\n':
+				case 'r':
+					fmt.Printf("%v\n",v.reg)
+				case 'i':
+					start, end := 0, 0
+					fmt.Println("S: ")
+					fmt.Scanf("\n%d\n", &start)
+					fmt.Println("E: ")
+					fmt.Scanf("%d\n", &end)
+					fmt.Printf("%v\n", v.bytes[start:end])
+					for ;start < end; start = start + 4 {
+						i, _ := convertBytesToInt32(v.bytes[start : start+4])
+						fmt.Printf("%d ", i)
+					}
+					fmt.Println()
+				case 'm':
+					start, end := 0, 0
+					fmt.Println("S: ")
+					fmt.Scanf("\n%d\n", &start)
+					fmt.Println("E: ")
+					fmt.Scanf("%d\n", &end)
+					fmt.Printf("%v\n", v.bytes[start:end])
+				default:
+					cont = false
+				}
+			}
 		}
 		pc = int(v.reg[PC])
 		
@@ -309,7 +340,7 @@ func (v *VirtualMachine) Run() error {
 			r := v.reg[reg2]
 			v.reg[reg1] = int32(v.bytes[r]) //consider actualy placing the byte in a specific location
 			if v.debug {
-				fmt.Printf("LDBI loaded value %d into register %d from \n", r, reg1, v.reg[reg2])
+				fmt.Printf("LDBI loaded value %d into register %d from %d\n", r, reg1, v.reg[reg2])
 				//fmt.Scanln()
 			}
 		case LDR: //5
