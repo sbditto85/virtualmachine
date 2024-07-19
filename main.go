@@ -1,8 +1,8 @@
 package main
 
 import (
-	amb "./assembler"
-	vm "./virtualmachine"
+	amb "github.com/sbditto85/virtualmachine/assembler"
+	vm "github.com/sbditto85/virtualmachine/virtualmachine"
 	"fmt"
 	"os"
 )

@@ -1,7 +1,7 @@
 package virtualmachine
 
 import (
-	asm "../assembler"
+	asm "github.com/sbditto85/virtualmachine/assembler"
 	"testing"
 )
 
